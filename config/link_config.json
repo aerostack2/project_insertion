@@ -1,14 +1,14 @@
 {
   "dji_sdk_link_config": {
     "link_available": "use_only_uart/use_uart_and_usb_bulk_device/use_uart_and_network_device",
-    "link_select": "use_uart_and_usb_bulk_device",
+    "link_select": "use_uart_and_network_device",
     "uart_config": {
-      "uart1_device_name": "/dev/dji_serial",
+      "uart1_device_name": "/dev/ttyUSB0",
       "uart2_device_enable": "true",
-      "uart2_device_name": "/dev/dji_advanced_sensing"
+      "uart2_device_name": "/dev/ttyACM0"
     },
     "network_config": {
-      "network_device_name": "enxf8e43b7bbc2c",
+      "network_device_name": "l4tbr0",
       "network_usb_adapter_vid": "0x0B95",
       "network_usb_adapter_pid": "0x1790"
     },

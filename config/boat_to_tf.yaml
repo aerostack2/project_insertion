@@ -4,9 +4,9 @@ objects:
     parent_frame: earth
     frame: boat
     gps_pose:
-      lat: 39.79362738
-      lon: -4.0837719
-      alt: 600.055
+      lat: 39.794273
+      lon: -4.081537
+      alt: 545.0
     orientation:
       azimuth: 0.0
       bank: 0.0

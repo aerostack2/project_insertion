@@ -1,7 +1,7 @@
 /**:
   # Global Parameters
   ros__parameters:
-    tf_timeout_threshold: 0.05
+    tf_timeout_threshold: 0.5
 
 /**:
   # Basic Robotics Functions
@@ -17,6 +17,7 @@
       plugin_name: "raw_odometry"
       use_gps: true
       set_origin_on_start: true
+      # earth_to_map_height: 0.0
 
   # Behaviors Motion
   TakeoffBehavior:

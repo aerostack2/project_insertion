@@ -1,4 +1,4 @@
 ---
-timer_max_wait_time: 30
-timer_min_wait_time: 20
-max_samples: 5
+timer_max_wait_time: 700000
+timer_min_wait_time: 500000
+max_samples: 3
