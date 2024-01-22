@@ -10,11 +10,11 @@ def drone_run(drone_interface: DroneInterface):
 
     speed = 0.5
     takeoff_height = 1.0
-    height = 1.0
+    height = 3.0
 
     sleep_time = 2.0
 
-    dim = 2.0
+    dim = 10.0
     path = [
         [dim, dim, height],
         [dim, -dim, height],

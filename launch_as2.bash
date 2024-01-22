@@ -2,7 +2,7 @@
 
 usage() {
     echo "  options:"
-    echo "      -e: estimator_type, choices: [raw_odometry, mocap_pose, ground_truth]"
+    echo "      -e: estimator_type, choices: [gps_odometry, raw_odometry, mocap_pose, ground_truth]"
     echo "      -r: record rosbag"
     echo "      -t: launch keyboard teleoperation"
     echo "      -n: drone namespace, default is drone0"
@@ -44,7 +44,7 @@ source utils/tools.bash
 shift $((OPTIND -1))
 
 ## DEFAULTS
-estimator_plugin=${estimator_plugin:="raw_odometry"}
+estimator_plugin=${estimator_plugin:="gps_odometry"}
 record_rosbag=${record_rosbag:="false"}
 launch_keyboard_teleop=${launch_keyboard_teleop:="false"}
 drone_namespace=${drone_namespace:="drone"}
@@ -58,7 +58,7 @@ done
 
 for ns in "${drone_ns[@]}"
 do
-  tmuxinator start -n ${ns} -p tmuxinator/session.yml drone_namespace=${ns} estimator_plugin=${estimator_plugin} &
+  tmuxinator start -n ${ns} -p tmuxinator/aerostack.yml drone_namespace=${ns} estimator_plugin=${estimator_plugin} &
   wait
 done
 

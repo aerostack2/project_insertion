@@ -4,16 +4,20 @@ drone_namespace     = @settings["drone_namespace"]
 estimator_plugin    = @settings["estimator_plugin"]
 
 # Other parameters
+config_folder               = "real_config"
 behavior_type               = "position"
 motion_controller_plugin    = "pid_speed_controller"
-simulation                  = "false"
+use_sim_time                = "false"
 
 if estimator_plugin == "mocap_pose"
     state_estimator_config_file = "real_config/state_estimator_mocap.yaml"
 elsif estimator_plugin == "raw_odometry"
-    state_estimator_config_file = "sim_config/state_estimator_odom.yaml"
+    state_estimator_config_file = "real_config/state_estimator_odom.yaml"
 elsif estimator_plugin == "ground_truth"
-    state_estimator_config_file = "sim_config/state_estimator_ground_truth.yaml"
+    state_estimator_config_file = "real_config/state_estimator_ground_truth.yaml"
+elsif estimator_plugin == "gps_odometry"
+    state_estimator_config_file = "real_config/state_estimator_odom_gps.yaml"
+    estimator_plugin = "raw_odometry"
 end
 
 %>
@@ -28,16 +32,20 @@ windows:
   - platform:
       layout: tiled
       panes:
-        - ros2 launch as2_platform as2_platform_launch.py
+        - ros2 launch as2_platform_dji_psdk wrapper.launch.py
             namespace:=<%= drone_namespace %>
-            use_sim_time:=<%= simulation %>
-            platform_config_file:=real_config/platform_config.yaml
+            use_sim_time:=<%= use_sim_time %>
+            psdk_params:=<%= config_folder %>/psdk_params.yaml
+        - ros2 launch as2_platform_dji_psdk as2_platform_dji_psdk_launch.py
+            namespace:=<%= drone_namespace %>
+            use_sim_time:=<%= use_sim_time %>
+            platform_config_file:=<%= config_folder %>/platform_config.yaml
   - state_estimator:
       layout:
       panes:
         - ros2 launch as2_state_estimator state_estimator_launch.py
             namespace:=<%= drone_namespace %>
-            use_sim_time:=<%= simulation %>
+            use_sim_time:=<%= use_sim_time %>
             plugin_name:=<%= estimator_plugin %>
             plugin_config_file:=<%= state_estimator_config_file %>
   - controller:
@@ -45,24 +53,24 @@ windows:
       panes:
         - ros2 launch as2_motion_controller controller_launch.py
             namespace:=<%= drone_namespace %>
-            use_sim_time:=<%= simulation %>
+            use_sim_time:=<%= use_sim_time %>
             plugin_name:=<%= motion_controller_plugin %>
-            motion_controller_config_file:=real_config/motion_controller.yaml
-            plugin_config_file:=real_config/<%= motion_controller_plugin %>.yaml        
+            motion_controller_config_file:=<%= config_folder %>/motion_controller.yaml
+            plugin_config_file:=<%= config_folder %>/<%= motion_controller_plugin %>.yaml        
   - behaviors:
       layout:
       panes:
         - ros2 launch as2_behaviors_motion motion_behaviors_launch.py
             namespace:=<%= drone_namespace %>
-            use_sim_time:=<%= simulation %>
+            use_sim_time:=<%= use_sim_time %>
             follow_path_plugin_name:=follow_path_plugin_<%= behavior_type %>
             go_to_plugin_name:=go_to_plugin_<%= behavior_type %>
-            takeoff_plugin_name:=takeoff_plugin_<%= behavior_type %>
-            land_plugin_name:=land_plugin_speed
+            takeoff_plugin_name:=takeoff_plugin_platform
+            land_plugin_name:=land_plugin_platform
         <%- if behavior_type == "trajectory" %>
         - ros2 launch as2_behaviors_trajectory_generation generate_polynomial_trajectory_behavior_launch.py
             namespace:=<%= drone_namespace %>
-            use_sim_time:=<%= simulation %>
+            use_sim_time:=<%= use_sim_time %>
         <%- end %>
   - mission:
       layout:
