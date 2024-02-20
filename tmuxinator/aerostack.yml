@@ -35,11 +35,11 @@ windows:
         - ros2 launch as2_platform_dji_psdk wrapper.launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
-            psdk_params:=<%= config_folder %>/psdk_params.yaml
+            psdk_params_file_path:=<%= config_folder %>/psdk_params.yaml | grep -vE "h264|chmod"
         - ros2 launch as2_platform_dji_psdk as2_platform_dji_psdk_launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
-            platform_config_file:=<%= config_folder %>/platform_config.yaml
+            config_file:=<%= config_folder %>/platform_config.yaml
   - state_estimator:
       layout:
       panes:

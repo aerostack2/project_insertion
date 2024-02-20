@@ -78,4 +78,4 @@ if [[ ${launch_keyboard_teleop} == "true" ]]; then
 fi
 
 # Attach to tmux session ${drone_ns[@]}, window 0
-tmux attach-session -t ${drone_ns[0]}:mission
+tmux attach-session -t ${drone_ns[0]}:0
