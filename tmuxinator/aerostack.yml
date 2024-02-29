@@ -24,33 +24,23 @@ end
 attach: false
 root: ./
 windows:
-  - alphanumeric_viewer:
-      layout: tiled
-      panes:
-        - ros2 run as2_alphanumeric_viewer as2_alphanumeric_viewer_node
-            --ros-args -r  __ns:=/<%= drone_namespace %>
-  - platform:
-      layout: tiled
+  - robot:
+      layout:
       panes:
         - ros2 launch as2_platform_dji_psdk wrapper.launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
-            psdk_params_file_path:=<%= config_folder %>/psdk_params.yaml | grep -vE "h264|chmod"
+            psdk_params_file_path:=<%= config_folder %>/psdk_params.yaml
+            link_config_file_path:=<%= config_folder %>/link_config.json | grep -vE "h264|chmod"
         - ros2 launch as2_platform_dji_psdk as2_platform_dji_psdk_launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
             config_file:=<%= config_folder %>/platform_config.yaml
-  - state_estimator:
-      layout:
-      panes:
         - ros2 launch as2_state_estimator state_estimator_launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
             plugin_name:=<%= estimator_plugin %>
             plugin_config_file:=<%= state_estimator_config_file %>
-  - controller:
-      layout:
-      panes:
         - ros2 launch as2_motion_controller controller_launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
@@ -75,4 +65,6 @@ windows:
   - mission:
       layout:
       panes:
-        - 
+        - ros2 run as2_alphanumeric_viewer as2_alphanumeric_viewer_node
+            --ros-args -r  __ns:=/<%= drone_namespace %>
+        -

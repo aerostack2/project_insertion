@@ -6,6 +6,5 @@ SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"2ca3\", MODE=\"0666\"
 
 sudo udevadm control --reload-rules
 
-# sudo chmod 777 /dev/ttyTHS0
 sudo chmod 777 /dev/ttyACM0
 sudo chmod 777 /dev/ttyUSB0

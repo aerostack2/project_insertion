@@ -2,15 +2,18 @@
 
 usage() {
     echo "  options:"
+    echo "      -n: drone namespace, default is drone0"
     echo "      -e: estimator_type, choices: [gps_odometry, raw_odometry, mocap_pose, ground_truth]"
     echo "      -r: record rosbag"
     echo "      -t: launch keyboard teleoperation"
-    echo "      -n: drone namespace, default is drone0"
 }
 
 # Arg parser
-while getopts "se:rtn" opt; do
+while getopts "n:e:rt" opt; do
   case ${opt} in
+    n )
+      drone_namespace="${OPTARG}"
+      ;;
     e )
       estimator_plugin="${OPTARG}"
       ;;
@@ -19,9 +22,6 @@ while getopts "se:rtn" opt; do
       ;;
     t )
       launch_keyboard_teleop="true"
-      ;;
-    n )
-      drone_namespace="${OPTARG}"
       ;;
     \? )
       echo "Invalid option: -$OPTARG" >&2
@@ -38,7 +38,7 @@ while getopts "se:rtn" opt; do
   esac
 done
 
-source utils/tools.bash
+source utils/configure_dev_permissions.bash
 
 # Shift optional args
 shift $((OPTIND -1))
@@ -47,20 +47,11 @@ shift $((OPTIND -1))
 estimator_plugin=${estimator_plugin:="gps_odometry"}
 record_rosbag=${record_rosbag:="false"}
 launch_keyboard_teleop=${launch_keyboard_teleop:="false"}
-drone_namespace=${drone_namespace:="drone"}
+drone_namespace=${drone_namespace:="dji_psdk"}
 
 # Generate the list of drone namespaces
-drone_ns=()
-num_drones=1
-for ((i=0; i<${num_drones}; i++)); do
-  drone_ns+=("$drone_namespace$i")
-done
-
-for ns in "${drone_ns[@]}"
-do
-  tmuxinator start -n ${ns} -p tmuxinator/aerostack.yml drone_namespace=${ns} estimator_plugin=${estimator_plugin} &
-  wait
-done
+tmuxinator start -n ${drone_namespace} -p tmuxinator/aerostack.yml  drone_namespace=${drone_namespace} estimator_plugin=${estimator_plugin} &
+wait
 
 if [[ ${estimator_plugin} == "mocap_pose" ]]; then
   tmuxinator start -n mocap -p tmuxinator/mocap.yml &
@@ -68,14 +59,14 @@ if [[ ${estimator_plugin} == "mocap_pose" ]]; then
 fi
 
 if [[ ${record_rosbag} == "true" ]]; then
-  tmuxinator start -n rosbag -p tmuxinator/rosbag.yml drone_namespace=$(list_to_string "${drone_ns[@]}") &
+  tmuxinator start -n rosbag -p tmuxinator/rosbag.yml drone_namespace=${drone_namespace} &
   wait
 fi
 
 if [[ ${launch_keyboard_teleop} == "true" ]]; then
-  tmuxinator start -n keyboard_teleop -p tmuxinator/keyboard_teleop.yml simulation=false drone_namespace=$(list_to_string "${drone_ns[@]}") &
+  tmuxinator start -n keyboard_teleop -p tmuxinator/keyboard_teleop.yml simulation=false drone_namespace=${drone_namespace} &
   wait
 fi
 
-# Attach to tmux session ${drone_ns[@]}, window 0
-tmux attach-session -t ${drone_ns[0]}:0
+# Attach to tmux session
+tmux attach-session -t ${drone_namespace}:0
