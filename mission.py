@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     rclpy.init()
 
-    uav = DroneInterface(drone_id="drone0", verbose=False)
+    uav = DroneInterface(drone_id="dji_psdk", verbose=False)
 
     drone_run(uav)
 
