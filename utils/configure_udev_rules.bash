@@ -1,10 +1,7 @@
 #!/bin/bash
 
-sudo bash -c "echo 'SUBSYSTEM==\"usb\", ATTRS{id_vendor}==\"2ca3\", MODE=\"0666\"
-SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"2ca3\", MODE=\"0666\"
-' > /etc/udev/rules.d/DJIDevice.rules"
-
-sudo udevadm control --reload-rules
-
-sudo chmod 777 /dev/ttyACM0
-sudo chmod 777 /dev/ttyUSB0
+ROOT=$(dirname $0)
+sudo cp ${ROOT}/99-dji-psdk-custom.rules /etc/udev/rules.d/
+cat /etc/udev/rules.d/99-dji-psdk-custom.rules
+#
+sudo udevadm control --reload-rules &&  sudo udevadm trigger 

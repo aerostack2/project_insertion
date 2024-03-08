@@ -38,7 +38,7 @@ while getopts "n:e:rt" opt; do
   esac
 done
 
-source utils/configure_dev_permissions.bash
+source utils/configure_udev_chmod.bash
 
 # Shift optional args
 shift $((OPTIND -1))

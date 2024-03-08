@@ -2,5 +2,5 @@
   ros__parameters:
     cmd_freq: 30.0  # Hz of platform commands send
     info_freq: 10.0  # Hz of platform info publish
-    enbale_camera: true  # (default: false)
+    enable_camera: true  # (default: false)
     enable_gimbal: true  # (default: false)
