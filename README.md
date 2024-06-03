@@ -1,1 +1,1 @@
-# project_template
+# project_dji_psdk
