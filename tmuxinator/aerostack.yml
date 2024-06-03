@@ -27,13 +27,14 @@ windows:
   - robot:
       layout:
       panes:
-        - ros2 launch as2_platform_dji_psdk wrapper.launch.py
+        - ros2 launch as2_platform_dji_psdk psdk_wrapper.launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
+            psdk_authentication_params_file:=<%= config_folder %>/psdk_authentication.yaml
+            psdk_params_file:=<%= config_folder %>/psdk_params.yaml
             tf_frame_prefix:=<%= drone_namespace %>/
-            psdk_params_file_path:=<%= config_folder %>/psdk_params.yaml
             link_config_file_path:=<%= config_folder %>/link_config.json | grep -vE "h264|chmod"
-        - ros2 launch as2_platform_dji_psdk as2_platform_dji_psdk_launch.py
+        - ros2 launch as2_platform_dji_psdk as2_platform_dji_psdk.launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
             config_file:=<%= config_folder %>/platform_config.yaml
@@ -54,5 +55,17 @@ windows:
         - ros2 launch as2_behaviors_motion motion_behaviors_launch.py
             namespace:=<%= drone_namespace %>
             use_sim_time:=<%= use_sim_time %>
-            config_file:=<%= config_folder %>/point_gimbal.yaml
+            follow_path_plugin_name:=follow_path_plugin_<%= behavior_type %>
+            go_to_plugin_name:=go_to_plugin_<%= behavior_type %>
+            takeoff_plugin_name:=takeoff_plugin_platform
+            land_plugin_name:=land_plugin_platform
+        - ros2 launch as2_behaviors_perception point_gimbal_behavior.launch.py
+            namespace:=<%= drone_namespace %>
+            use_sim_time:=<%= use_sim_time %>
+            config_file:=<%= config_folder %>/gimbal_behavior.yaml
+  - mission:
+      layout:
+      panes:
+        - ros2 run as2_alphanumeric_viewer as2_alphanumeric_viewer_node
+            --ros-args -r  __ns:=/<%= drone_namespace %>
         -
