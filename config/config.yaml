@@ -8,20 +8,12 @@
   # Platform
   platform:
     ros__parameters:
-      enable_camera: false
+      enable_camera: true
       enable_gimbal: false
 
   # State Estimator
   state_estimator:
     ros__parameters:
-      # # Indoor Raw Odometry
-      # plugin_name: "raw_odometry"
-      # # Indoor Motion Capture
-      # plugin_name: "mocap_pose"
-      # mocap_topic: "/mocap/rigid_bodies"
-      # twist_smooth_filter_cte: 0.1
-      # orientation_smooth_filter_cte: 0.1
-      # Outdoor (GPS) Raw Odometry
       plugin_name: "raw_odometry"
       use_gps: true
       set_origin_on_start: true
@@ -41,20 +33,3 @@
     ros__parameters:
       follow_path_plugin_name: "follow_path_plugin_position"
       # follow_path_plugin_name: "follow_path_plugin_trajectory"
-
-  # Behaviors Perception
-  point_gimbal_behavior:
-    ros__parameters:
-      behavior_timeout: 10.0
-      gimbal_name: gimbal
-      gimbal_frame_id: gimbal
-      gimbal_base_frame_id: gimbal_base
-      gimbal_threshold: 0.01
-
-# Specific Parameters for each drone
-# drone0:
-#   # Motion Capture
-#   state_estimator:
-#     ros__parameters:
-#       rigid_body_name: "1"
-
