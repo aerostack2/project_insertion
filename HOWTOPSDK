@@ -1,0 +1,57 @@
+M30T
+====
+EPORT en HOST
+
+ssh cvar@192.168.0.68 sudo -S date --set @$(date -u +%s) 
+
+ssh cvar@192.168.0.68
+ssh cvar@ubuntu.local
+
+echo device | sudo tee /sys/class/usb_role/usb2-0-role-switch/role
+
+sudo ifconfig usb0 192.168.1.1 netmask 255.255.255.0 up
+
+ifconfig | grep l4tbr0
+CHECK INTERFACE IS AVAILABLE
+
+cd isaac_ros_common/compose
+
+./compose.sh
+
+cd project_dji_psdk/
+
+./launch_as2.bash
+
+IF PLATFORM:  DJI core could not be initiated
+STOP, UNPLUG AND PLUG NX's USB-C AND TRY AGAIN
+
+
+======
+IMAGES: CONFIG PARAMS
+======
+
+====
+M300
+====
+EPORT en DEVICE
+
+ssh cvar@192.168.0.151 sudo -S date --set @$(date -u +%s) 
+
+ssh cvar@192.168.0.151
+ssh cvar@cvar-orin-agx.localas2
+
+echo host | sudo tee /sys/class/usb_role/usb2-0-role-switch/role
+
+ls /dev/ttyACM*
+CHECK DEVICE IS AVAILABLE, IF NOT REBOOT DRONE OR AGX
+
+cd /isaac_ros_common/compose
+
+./compose.sh
+
+cd project_dji_psdk/
+
+./launch_as2.bash
+
+IF PLATFORM:  DJI core could not be initiated
+STOP, UNPLUG AND PLUG NX's USB-C AND TRY AGAIN
