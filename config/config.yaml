@@ -1,60 +1,68 @@
 /**:
-  # Global Parameters
   ros__parameters:
-    tf_timeout_threshold: 0.05
-
-/**:
-  # Basic Robotics Functions
-  # Platform
+    use_sim_time: True
   platform:
     ros__parameters:
-      enable_camera: false
-      enable_gimbal: false
-
-  # State Estimator
+      cmd_freq: 30.0  # Hz of platform commands send
+      info_freq: 10.0  # Hz of platform info publish
+      enable_takeoff_platform: false  # Enable takeoff platform, only for debugging purposes
+      enable_land_platform: false  # Enable land platform, only for debugging purposes
   state_estimator:
     ros__parameters:
-      # # Indoor Raw Odometry
-      # plugin_name: "raw_odometry"
-      # # Indoor Motion Capture
-      # plugin_name: "mocap_pose"
-      # mocap_topic: "/mocap/rigid_bodies"
-      # twist_smooth_filter_cte: 0.1
-      # orientation_smooth_filter_cte: 0.1
-      # Outdoor (GPS) Raw Odometry
-      plugin_name: "raw_odometry"
-      use_gps: true
-      set_origin_on_start: true
-
-  # Behaviors Motion
+      plugin_name: ground_truth
+      use_gazebo_tf: True
+  controller_manager:
+    ros__parameters:
+      plugin_name: pid_speed_controller
+      cmd_freq: 30.0  # Hz of platform commands send
+      info_freq: 10.0  # Hz of platform info publish
+      odom_frame_id: "odom"
+      base_frame_id: "base_link"
+      use_bypass: true
+      tf_timeout_threshold: 0.05  # seconds
+      proportional_limitation: true
+      position_control:
+        reset_integral: false
+        antiwindup_cte: 0.5
+        alpha: 0.2
+        kp:
+          x: 1.0
+          y: 1.0
+          z: 1.0
+        kd:
+          x: 0.0
+          y: 0.0
+          z: 0.0
+        ki:
+          x: 0.0
+          y: 0.0
+          z: 0.0
+      yaw_control:
+        reset_integral: false
+        antiwindup_cte : 1.0
+        alpha: 0.3
+        kp: 1.0
+        kd: 0.001
+        ki: 0.0
   TakeoffBehavior:
     ros__parameters:
-      takeoff_plugin_name: "takeoff_plugin_platform"
+      takeoff_plugin_name: takeoff_plugin_position
   LandBehavior:
     ros__parameters:
-      land_plugin_name: "land_plugin_platform"
+      land_plugin_name: land_plugin_speed
   GoToBehavior:
     ros__parameters:
-      go_to_plugin_name: "go_to_plugin_position"
-      # go_to_plugin_name: "go_to_plugin_trajectory"
+      go_to_plugin_name: go_to_plugin_position
   FollowPathBehavior:
     ros__parameters:
-      follow_path_plugin_name: "follow_path_plugin_position"
-      # follow_path_plugin_name: "follow_path_plugin_trajectory"
-
-  # Behaviors Perception
-  point_gimbal_behavior:
+      follow_path_plugin_name: follow_path_plugin_position
+  PointGimbalBehavior:
     ros__parameters:
-      behavior_timeout: 10.0
-      gimbal_name: gimbal
-      gimbal_frame_id: gimbal
-      gimbal_base_frame_id: gimbal_base
-      gimbal_threshold: 0.01
-
-# Specific Parameters for each drone
-# drone0:
-#   # Motion Capture
-#   state_estimator:
-#     ros__parameters:
-#       rigid_body_name: "1"
-
+      gimbal_name: gb
+      gimbal_frame_id: gb/_0/_1/_2
+      gimbal_base_frame_id: gb
+      gimbal_threshold: 0.1
+      tf_timeout_threshold: 0.5
+  RotateBehavior:
+    ros__parameters:
+      rotation_speed: 0.1

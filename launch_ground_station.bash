@@ -5,7 +5,6 @@ usage() {
     echo "      -n: drone namespaces, comma separated. Default is 'drone0'"
     echo "      -t: launch keyboard teleoperation. Default not launch"
     echo "      -v: open rviz. Default not launch"
-    echo "      -m: launch mocap4ros2. Default not launch"
     echo "      -r: record rosbag. Default not launch"
     echo "      -g: launch using gnome-terminal instead of tmux. Default not set"
 }
@@ -14,12 +13,11 @@ usage() {
 drones_namespace_comma="drone0"
 keyboard_teleop="false"
 rviz="false"
-mocap4ros2="false"
 rosbag="false"
 use_gnome="false"
 
 # Parse command line arguments
-while getopts "n:tvmrg" opt; do
+while getopts "n:tvrg" opt; do
   case ${opt} in
     n )
       drones_namespace_comma="${OPTARG}"
@@ -29,9 +27,6 @@ while getopts "n:tvmrg" opt; do
       ;;
     v )
       rviz="true"
-      ;;
-    m )
-      mocap4ros2="true"
       ;;
     r )
       rosbag="true"
@@ -76,7 +71,6 @@ eval "tmuxinator ${tmuxinator_mode} -n ground_station -p tmuxinator/ground_stati
   keyboard_teleop=${keyboard_teleop} \
   rviz=${rviz} \
   rosbag=${rosbag} \
-  mocap4ros2=${mocap4ros2} \
   ${tmuxinator_end}"
 
 # Attach to tmux session
