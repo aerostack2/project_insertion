@@ -53,7 +53,7 @@
       ////               Use 'deny' to allow all except the specified interfaces. If an interface type is set to an empty list
       ////               or is not specified at all, it means that ALL such interface are allowed.
       allow: {
-        publishers: ["*/mission_status"],
+        publishers: ["*/mission_status", "*/self_localization/pose", "*/platform_info"],
         subscribers: ["*/mission_update"],
         // service_servers: [".*/.*_parameters"],
         // service_clients: [],
