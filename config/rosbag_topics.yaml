@@ -1,0 +1,11 @@
+# Aerostack2
+/drone0/actuator_command/twist
+/drone0/motion_reference/pose
+/drone0/self_localization/pose
+/drone0/self_localization/twist
+/drone0/sensor_measurements/battery
+/drone0/sensor_measurements/imu
+/rosout
+/tf
+/tf_static
+

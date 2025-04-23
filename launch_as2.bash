@@ -55,14 +55,14 @@ if [[ ${use_gnome} == "true" ]]; then
 fi
 
 # Launch aerostack2
-eval "tmuxinator ${tmuxinator_mode} -n ${drones_namespace} -p tmuxinator/aerostack2.yaml \
+eval "tmuxinator ${tmuxinator_mode} -n drone -p tmuxinator/aerostack2.yaml \
   drone_namespace=${drones_namespace} \
   rosbag=${rosbag} \
   ${tmuxinator_end}"
 
 # Attach to tmux session
 if [[ ${use_gnome} == "false" ]]; then
-  tmux attach-session -t ${drones_namespace}
+  tmux attach-session -t drone
 # If tmp_file exists, remove it
 elif [[ -f ${tmp_file} ]]; then
   rm ${tmp_file}
