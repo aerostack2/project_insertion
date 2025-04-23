@@ -57,7 +57,7 @@ windows:
             root: ./mission/
             layout:
             panes:
-                - echo Run here the mission
+                - ros2 run as2_python_api mission_executor --n <%= drone_namespace %> --use_sim_time
                 - ros2 launch as2_visualization as2_visualization.launch.py
                     namespace:=<%= drone_namespace %>
                     record_length:=10000
