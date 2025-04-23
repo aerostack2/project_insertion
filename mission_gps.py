@@ -46,12 +46,12 @@ SLEEP_TIME = 0.5  # Sleep time between behaviors in seconds
 SPEED = 1.0  # Max speed in m/s
 HEIGHT = 5.0  # Height in meters
 GPS_PATH = [
-    [40.4405287, -3.6898277, HEIGHT],
-    [40.4405298, -3.6898296, HEIGHT],
-    [40.4405410, -3.6898235, HEIGHT],
-    [40.4405914, -3.6898241, HEIGHT],
-    [40.4405934, -3.6898216, HEIGHT],
-    [40.4405068, -3.6898277, HEIGHT]
+    [39.7935287, -4.0837577, HEIGHT],
+    [39.7935298, -4.0837596, HEIGHT],
+    [39.7935410, -4.0837535, HEIGHT],
+    [39.7935914, -4.0837541, HEIGHT],
+    [39.7935934, -4.0837516, HEIGHT],
+    [39.7935068, -4.0837577, HEIGHT]
 ]
 LAND_SPEED = 0.5  # Max speed in m/s
 
