@@ -11,6 +11,12 @@
     ros__parameters:
       plugin_name: ground_truth
       use_gazebo_tf: True
+      use_gps: true
+      set_origin_on_start: true
+      set_origin:
+        lat: 39.79358837125783
+        lon: -4.083758865682998
+        alt: 600.0
   controller_manager:
     ros__parameters:
       plugin_name: pid_speed_controller
@@ -63,6 +69,3 @@
       gimbal_base_frame_id: gb
       gimbal_threshold: 0.1
       tf_timeout_threshold: 0.5
-  RotateBehavior:
-    ros__parameters:
-      rotation_speed: 0.1
