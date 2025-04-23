@@ -6,7 +6,7 @@
 $HOME/project_insertion/utils/sync_date.bash rafa
 
 # Set the USB role to host
-$HOME/project_insertion/utils/config_psdk.bash host
+$HOME/project_insertion/utils/config_psdk.bash device
 
 # Set multicast on for the loopback interface
 sudo ip l set lo multicast on
