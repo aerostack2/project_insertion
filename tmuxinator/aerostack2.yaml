@@ -9,10 +9,10 @@ root: ./
 startup_window: mission_monitoring
 windows:
   # Zenoh
-  # - zenoh:
-  #     layout:
-  #     panes:
-  #       - zenoh-bridge-ros2dds
+  - zenoh:
+      layout:
+      panes:
+        - zenoh_drone.bash
 
   # Platform
   - platform:
@@ -56,10 +56,8 @@ windows:
             --ros-args -r  __ns:=/<%= drone_namespace %>
         - ros2 run as2_python_api mission_executor --n drone0 --add_namespace
 
-  <%- if rosbag %>
   # Rosbag
   - rosbag:
       layout:
       panes:
-        - ./record_rosbag.bash config/rosbag_topics.yaml
-  <%- end %>
+        - ./record_rosbag.bash
