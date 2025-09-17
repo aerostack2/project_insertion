@@ -50,7 +50,7 @@ while getopts "n:tvrg" opt; do
 done
 
 # If no drone namespaces are provided, finish the execution
-if [ -z "$drones_namespace" ]; then
+if [ -z "$drones_namespace_comma" ]; then
   echo "No drone namespace provided. Set it using the -n option"
   exit 1
 fi
