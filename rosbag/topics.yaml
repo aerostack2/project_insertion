@@ -1,0 +1,30 @@
+# Aerostack2
+/rosout
+/tf
+/tf_static
+/mission_status
+/mission_update
+
+# Drone0
+/drone0/actuator_command/pose
+/drone0/actuator_command/thrust
+/drone0/actuator_command/trajectory
+/drone0/actuator_command/twist
+/drone0/motion_reference/pose
+/drone0/motion_reference/thrust
+/drone0/motion_reference/trajectory
+/drone0/motion_reference/twist
+/drone0/platform/info
+/drone0/controller/info
+/drone0/TakeoffBehavior/_behavior/behavior_status
+/drone0/GoToBehavior/_behavior/behavior_status
+/drone0/FollowPathBehavior/_behavior/behavior_status
+/drone0/LandBehavior/_behavior/behavior_status
+/drone0/self_localization/pose
+/drone0/self_localization/twist
+/drone0/sensor_measurements/battery
+/drone0/sensor_measurements/imu
+/drone0/sensor_measurements/gps
+/drone0/mission_status
+/drone0/mission_update
+# /drone0/sensor_measurements/main_camera/image_raw

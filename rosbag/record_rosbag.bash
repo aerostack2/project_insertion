@@ -1,39 +1,52 @@
 #!/bin/bash
 
-usage() {
-    echo "  Add drones namespaces as arguments, separated by commas"
-}
+# Get file name from argument. Default use config.yaml
+if [ "$#" -eq 1 ]; then
+  CONFIG_FILE="$1"
+else
+  CONFIG_FILE="topics.yaml"
+fi
 
-# Get drone namespaces from command-line argument
-drones_namespace_comma=$1
-drone_namespaces=$(echo $drones_namespace_comma | tr "," " ")
+# Get the directory of the script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "Recording rosbag for drones: ${drones_namespace_comma[@]}"
+# Configuration file path (absolute path)
+CONFIG_FILE="$SCRIPT_DIR/$CONFIG_FILE"
 
-# Create directory for rosbags
-mkdir rosbag/rosbags 2>/dev/null
-cd rosbag/rosbags
+# Check if the config file exists
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Error: Configuration file not found in $CONFIG_FILE"
+  exit 1
+fi
+
+# Create directory for rosbag storage
+mkdir -p rosbags
+cd rosbags || exit
+
+# Generate rosbag name with date and time
+timestamp=$(date +"%Y%m%d_%H%M%S")
+ROSBAG_NAME="rosbag2_${timestamp}"
 
 # Construct the rosbag record command
-rosbag_cmd="ros2 bag record"
+rosbag_cmd="ros2 bag record --include-hidden-topics"
 
-# Uncomment the following lines to record specific topics
-# Add topics and drone namespaces to the rosbag record command
-# for drone_namespace in ${drone_namespaces[@]}; do
-#   rosbag_cmd+=" /${drone_namespace}/platform/info \
-#                 /${drone_namespace}/self_localization/pose \
-#                 /${drone_namespace}/self_localization/twist \
-#                 /${drone_namespace}/actuator_command/twist"
-# done
-# Add remaining topics
-# rosbag_cmd+=" /tf /tf_static"
+# Read topics from the config file, ignoring comments (#) and disabled topics (!)
+while IFS= read -r topic; do
+  [[ "$topic" =~ ^#.*$ || "$topic" =~ ^!.*$ || -z "$topic" ]] && continue  # Skip comments, disabled topics, and empty lines
+  rosbag_cmd+=" ${topic}"
+done < "$CONFIG_FILE"
 
-# Comment the following line to record specific topics
-# Record all topics
-rosbag_cmd+=" --all"
+# Check if any topics were added
+if [[ "$rosbag_cmd" == "ros2 bag record --include-hidden-topics" ]]; then
+  echo "Warning: No valid topics found in $CONFIG_FILE"
+  exit 1
+fi
 
-# Include hidden topics
-rosbag_cmd+="  --include-hidden-topics"
+# Add output name to the command
+rosbag_cmd+=" -o ${ROSBAG_NAME}"
+
+echo "Rosbag name: ${ROSBAG_NAME}"
+echo "Starting rosbag recording..."
 
 # Execute the rosbag record command
 eval "$rosbag_cmd"

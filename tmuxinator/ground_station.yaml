@@ -44,5 +44,5 @@ windows:
             rviz_config:=config_ground_station/config.rviz
       <%- end %>
       <%- if rosbag %>
-        - ./rosbag/record_rosbag.bash <%= drone_namespace %>
+        - ./rosbag/record_rosbag.bash
       <%- end %>
