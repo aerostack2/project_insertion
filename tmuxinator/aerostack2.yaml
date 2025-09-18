@@ -47,6 +47,9 @@ windows:
         - ros2 launch as2_behaviors_motion motion_behaviors_launch.py
             namespace:=<%= drone_namespace %>
             config_file:=config/config.yaml
+        - ros2 launch as2_external_object_to_tf as2_external_object_to_tf_launch.py
+            namespace:=<%= drone_namespace %>
+            config_file:=config/boat_to_tf.yaml
 
   # Mission monitoring
   - mission_monitoring:
