@@ -52,8 +52,7 @@ class AreaScanMission(Mission):
     """Area Scan mission using go_to waypoints"""
 
     def __init__(self, target, area_corners, altitude, speed):
-        super().__init__()
-        self.target = target
+        super().__init__(target=target)
 
         takeoff_item = MissionItem(behavior='takeoff',
                                    args={'height': altitude, 'speed': speed})
@@ -66,7 +65,7 @@ class AreaScanMission(Mission):
 
         go_to_item = MissionItem(behavior='go_to', method='go_to_point_path_facing',
                                  args={'point': [0.0, 0.0, altitude], 'speed': speed,
-                                       'frame_id': 'drone0/map'})
+                                       'frame_id': f'{target}/map'})
         self.plan.append(go_to_item)
 
         land_item = MissionItem(behavior='land', args={'speed': speed})
@@ -77,8 +76,7 @@ class AreaScanFollowPathMission(Mission):
     """Area Scan mission using follow_path behavior"""
 
     def __init__(self, target, area_corners, altitude, speed):
-        super().__init__()
-        self.target = target
+        super().__init__(target=target)
 
         takeoff_item = MissionItem(behavior='takeoff',
                                    args={'height': altitude, 'speed': speed})
@@ -100,17 +98,16 @@ class TakeSampleMission(Mission):
     """Take Sample mission, go down and up"""
 
     def __init__(self, target, altitude, speed):
-        super().__init__()
-        self.target = target
+        super().__init__(target=target)
 
         go_to_item = MissionItem(behavior='go_to', method='go_to_point',
                                  args={'point': [0.0, 0.0, -altitude], 'speed': speed,
-                                       'frame_id': 'drone0/base_link'})
+                                       'frame_id': f'{target}/base_link'})
         self.plan.append(go_to_item)
 
         go_to_item = MissionItem(behavior='go_to', method='go_to_point',
                                  args={'point': [0.0, 0.0, altitude], 'speed': speed,
-                                       'frame_id': 'drone0/base_link'})
+                                       'frame_id': f'{target}/base_link'})
         self.plan.append(go_to_item)
 
 
@@ -118,8 +115,7 @@ class BoatMission(Mission):
     """Boat mission, go to a point in boat frame"""
 
     def __init__(self, target, altitude, speed):
-        super().__init__()
-        self.target = target
+        super().__init__(target=target)
 
         go_to_item = MissionItem(behavior='go_to', method='go_to_point',
                                  args={'point': [0.0, 0.0, altitude], 'speed': speed,
@@ -187,7 +183,7 @@ class DummyGCS(Node):
 
     def publish_cmd(self, cmd: int):
         """Publish a command to the mission with mission_id=0"""
-        msg = MissionUpdate(drone_id='drone0', mission_id=0, action=cmd)
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0, action=cmd)
         self.uplink.publish(msg)
 
     def perform_take_sample_mission(self):
@@ -198,7 +194,7 @@ class DummyGCS(Node):
 
         time.sleep(0.5)
         self.get_logger().info("Start take sample mission")
-        msg = MissionUpdate(drone_id='drone0', mission_id=1, action=MissionUpdate.START)
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=1, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
         time.sleep(0.5)
@@ -206,7 +202,7 @@ class DummyGCS(Node):
             time.sleep(0.1)
 
         self.get_logger().info(f"Resume scan mission, {keep_item_id}")
-        msg = MissionUpdate(drone_id='drone0', mission_id=0,
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0,
                             item_id=keep_item_id, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
@@ -218,7 +214,7 @@ class DummyGCS(Node):
 
         time.sleep(0.5)
         self.get_logger().info("Start take sample mission")
-        msg = MissionUpdate(drone_id='drone0', mission_id=1, action=MissionUpdate.START)
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=1, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
         time.sleep(0.5)
@@ -238,7 +234,7 @@ class DummyGCS(Node):
 
         time.sleep(0.5)
         self.get_logger().info("Start boat mission")
-        msg = MissionUpdate(drone_id='drone0', mission_id=2, action=MissionUpdate.START)
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=2, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
         time.sleep(0.5)
@@ -246,7 +242,7 @@ class DummyGCS(Node):
             time.sleep(0.1)
 
         self.get_logger().info(f"Resume scan mission, {keep_item_id}")
-        msg = MissionUpdate(drone_id='drone0', mission_id=0,
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0,
                             item_id=keep_item_id, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
