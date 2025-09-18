@@ -37,6 +37,10 @@ windows:
             - ros2 launch as2_state_estimator state_estimator_launch.py
                 namespace:=<%= drone_namespace %>
                 config_file:=config/config.yaml
+            - ros2 launch as2_external_object_to_tf as2_external_object_to_tf_launch.py
+                namespace:=<%= drone_namespace %>
+                use_sim_time:=true
+                config_file:=config/boat_to_tf.yaml
     - controller:
         layout:
         panes:

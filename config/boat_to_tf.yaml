@@ -1,0 +1,13 @@
+---
+objects:
+  - type: gps_static
+    parent_frame: earth
+    frame: boat
+    gps_pose:
+      lat: 39.79362738
+      lon: -4.0837719
+      alt: 600.055
+    orientation:
+      azimuth: 0.0
+      bank: 0.0
+      elevation: 0.0
