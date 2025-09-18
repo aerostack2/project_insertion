@@ -144,7 +144,7 @@ class InsertionMonitor(Node):
 
     def publish_cmd(self, cmd: int, mission_id: int = 0):
         """Publish a mission command"""
-        msg = MissionUpdate(drone_id='drone0', mission_id=mission_id, action=cmd)
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=mission_id, action=cmd)
         self.mission_update_pub.publish(msg)
 
     def perform_take_sample_mission(self):
@@ -162,7 +162,7 @@ class InsertionMonitor(Node):
             time.sleep(0.1)
 
         self.get_logger().info(f"Resume scan mission, {keep_item_id}")
-        msg = MissionUpdate(drone_id='drone0', mission_id=0,
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0,
                             item_id=keep_item_id, action=MissionUpdate.START)
         self.mission_update_pub.publish(msg)
 
@@ -181,7 +181,7 @@ class InsertionMonitor(Node):
             time.sleep(0.1)
 
         self.get_logger().info(f"Resume scan mission, {keep_item_id}")
-        msg = MissionUpdate(drone_id='drone0', mission_id=0,
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0,
                             item_id=keep_item_id, action=MissionUpdate.START)
         self.mission_update_pub.publish(msg)
 
