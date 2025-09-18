@@ -49,10 +49,11 @@ import rclpy
 
 
 class AreaScanMission(Mission):
-    target: str = 'drone0'
+    """Area Scan mission using go_to waypoints"""
 
-    def __init__(self, area_corners, altitude, speed):
+    def __init__(self, target, area_corners, altitude, speed):
         super().__init__()
+        self.target = target
 
         takeoff_item = MissionItem(behavior='takeoff',
                                    args={'height': altitude, 'speed': speed})
@@ -73,10 +74,11 @@ class AreaScanMission(Mission):
 
 
 class AreaScanFollowPathMission(Mission):
-    target: str = 'drone0'
+    """Area Scan mission using follow_path behavior"""
 
-    def __init__(self, area_corners, altitude, speed):
+    def __init__(self, target, area_corners, altitude, speed):
         super().__init__()
+        self.target = target
 
         takeoff_item = MissionItem(behavior='takeoff',
                                    args={'height': altitude, 'speed': speed})
@@ -95,10 +97,11 @@ class AreaScanFollowPathMission(Mission):
 
 
 class TakeSampleMission(Mission):
-    target: str = 'drone0'
+    """Take Sample mission, go down and up"""
 
-    def __init__(self, altitude, speed):
+    def __init__(self, target, altitude, speed):
         super().__init__()
+        self.target = target
 
         go_to_item = MissionItem(behavior='go_to', method='go_to_point',
                                  args={'point': [0.0, 0.0, -altitude], 'speed': speed,
@@ -112,10 +115,11 @@ class TakeSampleMission(Mission):
 
 
 class BoatMission(Mission):
-    target: str = 'drone0'
+    """Boat mission, go to a point in boat frame"""
 
-    def __init__(self, altitude, speed):
+    def __init__(self, target, altitude, speed):
         super().__init__()
+        self.target = target
 
         go_to_item = MissionItem(behavior='go_to', method='go_to_point',
                                  args={'point': [0.0, 0.0, altitude], 'speed': speed,
