@@ -26,7 +26,7 @@ windows:
             --ros-args -r  __ns:=/<%= drone %>
     <%- end %>
         - echo Run here the mission
-        - python3 dummy_gcs.py
+        - python3 dummy_gcs.py --n <%= drone_namespace %>
 
   # Ground station
   - ground_station:
