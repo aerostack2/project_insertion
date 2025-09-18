@@ -40,7 +40,12 @@ import threading
 import time
 
 from as2_msgs.msg import MissionUpdate
-from as2_python_api.mission_interpreter.mission import InterpreterStatus, Mission, MissionItem
+from as2_python_api.mission_interpreter.mission import (
+    InterpreterState,
+    InterpreterStatus,
+    Mission,
+    MissionItem,
+)
 import rclpy
 from rclpy.node import Node
 from rclpy.parameter import Parameter
@@ -306,7 +311,7 @@ class DummyGCS(Node):
         self.status = InterpreterStatus.parse_raw(msg.data)
         self.get_logger().info(str(self.status))
 
-        self.is_idle = self.status.state == InterpreterStatus.State.IDLE
+        self.is_idle = self.status.state == InterpreterState.IDLE
 
 
 def main():
