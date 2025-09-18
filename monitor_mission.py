@@ -101,9 +101,9 @@ class InsertionMonitor(Node):
         )
 
         self.mission_status_sub = self.create_subscription(
-            String, "/mission_status", self.mission_status_callback, status_qos_profile)
+            String, "mission_status", self.mission_status_callback, status_qos_profile)
         self.mission_update_pub = self.create_publisher(
-            MissionUpdate, "/mission_update", qos_profile_system_default)
+            MissionUpdate, "mission_update", qos_profile_system_default)
 
         self.platform_info_sub = self.create_subscription(
             PlatformInfo, "/" + drone_target + "/platform/info",
