@@ -38,14 +38,15 @@ __license__ = 'BSD-3-Clause'
 import argparse
 import threading
 import time
+
 from as2_msgs.msg import MissionUpdate
-from as2_python_api.mission_interpreter.mission import Mission, MissionItem, InterpreterStatus
-from std_msgs.msg import String
-from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, qos_profile_system_default
+from as2_python_api.mission_interpreter.mission import InterpreterStatus, Mission, MissionItem
+import rclpy
 from rclpy.node import Node
 from rclpy.parameter import Parameter
+from rclpy.qos import HistoryPolicy, qos_profile_system_default, QoSProfile, ReliabilityPolicy
+from std_msgs.msg import String
 from std_srvs.srv import Trigger
-import rclpy
 
 
 class AreaScanMission(Mission):
@@ -54,18 +55,22 @@ class AreaScanMission(Mission):
     def __init__(self, target, area_corners, altitude, speed):
         super().__init__(target=target)
 
-        takeoff_item = MissionItem(behavior='takeoff',
-                                   args={'height': altitude, 'speed': speed})
+        takeoff_item = MissionItem(behavior='takeoff', args={'height': altitude, 'speed': speed})
         self.plan.append(takeoff_item)
 
         for corner in area_corners:
-            go_to_item = MissionItem(behavior='go_to', method='go_to_point_path_facing',
-                                     args={'point': corner + [altitude], 'speed': speed})
+            go_to_item = MissionItem(
+                behavior='go_to',
+                method='go_to_point_path_facing',
+                args={'point': corner + [altitude], 'speed': speed},
+            )
             self.plan.append(go_to_item)
 
-        go_to_item = MissionItem(behavior='go_to', method='go_to_point_path_facing',
-                                 args={'point': [0.0, 0.0, altitude], 'speed': speed,
-                                       'frame_id': f'{target}/map'})
+        go_to_item = MissionItem(
+            behavior='go_to',
+            method='go_to_point_path_facing',
+            args={'point': [0.0, 0.0, altitude], 'speed': speed, 'frame_id': f'{target}/map'},
+        )
         self.plan.append(go_to_item)
 
         land_item = MissionItem(behavior='land', args={'speed': speed})
@@ -78,16 +83,18 @@ class AreaScanFollowPathMission(Mission):
     def __init__(self, target, area_corners, altitude, speed):
         super().__init__(target=target)
 
-        takeoff_item = MissionItem(behavior='takeoff',
-                                   args={'height': altitude, 'speed': speed})
+        takeoff_item = MissionItem(behavior='takeoff', args={'height': altitude, 'speed': speed})
         self.plan.append(takeoff_item)
 
         path = []
         for corner in area_corners:
             path.append([corner[0], corner[1], altitude])
 
-        follow_path_item = MissionItem(behavior='follow_path', method='follow_path_with_path_facing',
-                                       args={'path': path, 'speed': speed})
+        follow_path_item = MissionItem(
+            behavior='follow_path',
+            method='follow_path_with_path_facing',
+            args={'path': path, 'speed': speed},
+        )
         self.plan.append(follow_path_item)
 
         land_item = MissionItem(behavior='land', args={'speed': speed})
@@ -100,14 +107,26 @@ class TakeSampleMission(Mission):
     def __init__(self, target, altitude, speed):
         super().__init__(target=target)
 
-        go_to_item = MissionItem(behavior='go_to', method='go_to_point',
-                                 args={'point': [0.0, 0.0, -altitude], 'speed': speed,
-                                       'frame_id': f'{target}/base_link'})
+        go_to_item = MissionItem(
+            behavior='go_to',
+            method='go_to_point',
+            args={
+                'point': [0.0, 0.0, -altitude],
+                'speed': speed,
+                'frame_id': f'{target}/base_link',
+            },
+        )
         self.plan.append(go_to_item)
 
-        go_to_item = MissionItem(behavior='go_to', method='go_to_point',
-                                 args={'point': [0.0, 0.0, altitude], 'speed': speed,
-                                       'frame_id': f'{target}/base_link'})
+        go_to_item = MissionItem(
+            behavior='go_to',
+            method='go_to_point',
+            args={
+                'point': [0.0, 0.0, altitude],
+                'speed': speed,
+                'frame_id': f'{target}/base_link',
+            },
+        )
         self.plan.append(go_to_item)
 
 
@@ -117,9 +136,11 @@ class BoatMission(Mission):
     def __init__(self, target, altitude, speed):
         super().__init__(target=target)
 
-        go_to_item = MissionItem(behavior='go_to', method='go_to_point',
-                                 args={'point': [0.0, 0.0, altitude], 'speed': speed,
-                                       'frame_id': 'boat'})
+        go_to_item = MissionItem(
+            behavior='go_to',
+            method='go_to_point',
+            args={'point': [0.0, 0.0, altitude], 'speed': speed, 'frame_id': 'boat'},
+        )
         self.plan.append(go_to_item)
 
 
@@ -134,19 +155,25 @@ class DummyGCS(Node):
         self.set_parameters([self.param_use_sim_time])
 
         self.__resume_client = self.create_client(
-            Trigger, f'/{drone_target}/FollowPathBehavior/_behavior/resume')
+            Trigger, f'/{drone_target}/FollowPathBehavior/_behavior/resume'
+        )
 
-        qos = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, history=HistoryPolicy.KEEP_LAST,
-                         depth=10)
+        qos = QoSProfile(
+            reliability=ReliabilityPolicy.RELIABLE, history=HistoryPolicy.KEEP_LAST, depth=10
+        )
 
         self.uplink = self.create_publisher(
-            MissionUpdate, f'/{drone_target}/mission_update', qos_profile_system_default)
+            MissionUpdate, f'/{drone_target}/mission_update', qos_profile_system_default
+        )
 
         self.status = None
         self.downlink = self.create_subscription(
-            String, f'/{drone_target}/mission_status', self.downlink_callback, qos)
+            String, f'/{drone_target}/mission_status', self.downlink_callback, qos
+        )
 
-        self.get_logger().info("Dummy GCS ready")
+        self.is_idle = False
+
+        self.get_logger().info('Dummy GCS ready')
 
     def publish_mission(self):
         """Load all three missions to the drone"""
@@ -157,28 +184,42 @@ class DummyGCS(Node):
         scan_mission = AreaScanMission(
             target=self.drone_target,
             area_corners=[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
-            altitude=2.0, speed=1.0)
+            altitude=2.0,
+            speed=1.0,
+        )
 
-        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0, action=MissionUpdate.LOAD,
-                            mission=scan_mission.json())
-        self.get_logger().info(f"Publishing Area Scan mission")
-        self.get_logger().debug(f"{scan_mission.json()}")
+        msg = MissionUpdate(
+            drone_id=self.drone_target,
+            mission_id=0,
+            action=MissionUpdate.LOAD,
+            mission=scan_mission.json(),
+        )
+        self.get_logger().info('Publishing Area Scan mission')
+        self.get_logger().debug(f'{scan_mission.json()}')
         self.uplink.publish(msg)
 
         time.sleep(0.5)
         take_sample_mission = TakeSampleMission(target=self.drone_target, altitude=1.0, speed=0.5)
-        msg = MissionUpdate(drone_id=self.drone_target, mission_id=1, action=MissionUpdate.LOAD,
-                            mission=take_sample_mission.json())
-        self.get_logger().info(f"Publishing Take Sample mission")
-        self.get_logger().debug(f"{take_sample_mission.json()}")
+        msg = MissionUpdate(
+            drone_id=self.drone_target,
+            mission_id=1,
+            action=MissionUpdate.LOAD,
+            mission=take_sample_mission.json(),
+        )
+        self.get_logger().info('Publishing Take Sample mission')
+        self.get_logger().debug(f'{take_sample_mission.json()}')
         self.uplink.publish(msg)
 
         time.sleep(0.5)
         boat_mission = BoatMission(target=self.drone_target, altitude=1.0, speed=0.5)
-        msg = MissionUpdate(drone_id=self.drone_target, mission_id=2, action=MissionUpdate.LOAD,
-                            mission=boat_mission.json())
-        self.get_logger().info(f"Publishing Boat mission")
-        self.get_logger().debug(f"{boat_mission.json()}")
+        msg = MissionUpdate(
+            drone_id=self.drone_target,
+            mission_id=2,
+            action=MissionUpdate.LOAD,
+            mission=boat_mission.json(),
+        )
+        self.get_logger().info('Publishing Boat mission')
+        self.get_logger().debug(f'{boat_mission.json()}')
         self.uplink.publish(msg)
 
     def publish_cmd(self, cmd: int):
@@ -189,11 +230,14 @@ class DummyGCS(Node):
     def perform_take_sample_mission(self):
         """Stop current mission and start take sample mission and resume afterwards"""
         keep_item_id = self.status.done_items - 1
-        self.get_logger().info(f"Stop scan mission, {keep_item_id}")
+        self.get_logger().info(f'Stop scan mission, {keep_item_id}')
         self.publish_cmd(MissionUpdate.STOP)
 
+        while not self.is_idle:
+            time.sleep(0.1)
+
         time.sleep(0.5)
-        self.get_logger().info("Start take sample mission")
+        self.get_logger().info('Start take sample mission')
         msg = MissionUpdate(drone_id=self.drone_target, mission_id=1, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
@@ -201,19 +245,23 @@ class DummyGCS(Node):
         while self.status.current_item != None:
             time.sleep(0.1)
 
-        self.get_logger().info(f"Resume scan mission, {keep_item_id}")
-        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0,
-                            item_id=keep_item_id, action=MissionUpdate.START)
+        self.get_logger().info(f'Resume scan mission, {keep_item_id}')
+        msg = MissionUpdate(
+            drone_id=self.drone_target,
+            mission_id=0,
+            item_id=keep_item_id,
+            action=MissionUpdate.START,
+        )
         self.uplink.publish(msg)
 
     def perform_take_sample_mission_with_follow_path(self):
         """NOT WORKING. Stop current mission and start take sample mission and resume afterwards"""
-        self.get_logger().info(f"Pause scan mission")
+        self.get_logger().info('Pause scan mission')
         self.publish_cmd(MissionUpdate.PAUSE)
         self.publish_cmd(MissionUpdate.STOP)  # esto mata el behavior follow_path, goal canceled
 
         time.sleep(0.5)
-        self.get_logger().info("Start take sample mission")
+        self.get_logger().info('Start take sample mission')
         msg = MissionUpdate(drone_id=self.drone_target, mission_id=1, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
@@ -221,19 +269,22 @@ class DummyGCS(Node):
         while self.status.current_item != None:
             time.sleep(0.1)
 
-        self.get_logger().info("Resume scan mission")
+        self.get_logger().info('Resume scan mission')
         self.publish_cmd(MissionUpdate.RESUME)
         response = self.__resume_client.call(Trigger.Request())
-        print(f"{response=}")
+        print(f'{response=}')
 
     def perform_boat_mission(self):
         """Stop current mission and start boat mission and resume afterwards"""
         keep_item_id = self.status.done_items - 2  # Go back 1 waypoints
-        self.get_logger().info(f"Stop scan mission, {keep_item_id}")
+        self.get_logger().info(f'Stop scan mission, {keep_item_id}')
         self.publish_cmd(MissionUpdate.STOP)
 
+        while not self.is_idle:
+            time.sleep(0.1)
+
         time.sleep(0.5)
-        self.get_logger().info("Start boat mission")
+        self.get_logger().info('Start boat mission')
         msg = MissionUpdate(drone_id=self.drone_target, mission_id=2, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
@@ -241,9 +292,13 @@ class DummyGCS(Node):
         while self.status.current_item != None:
             time.sleep(0.1)
 
-        self.get_logger().info(f"Resume scan mission, {keep_item_id}")
-        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0,
-                            item_id=keep_item_id, action=MissionUpdate.START)
+        self.get_logger().info(f'Resume scan mission, {keep_item_id}')
+        msg = MissionUpdate(
+            drone_id=self.drone_target,
+            mission_id=0,
+            item_id=keep_item_id,
+            action=MissionUpdate.START,
+        )
         self.uplink.publish(msg)
 
     def downlink_callback(self, msg: String):
@@ -251,12 +306,14 @@ class DummyGCS(Node):
         self.status = InterpreterStatus.parse_raw(msg.data)
         self.get_logger().info(str(self.status))
 
+        self.is_idle = self.status.state == InterpreterStatus.State.IDLE
+
 
 def main():
     """Main function, node spin"""
     argument_parser = parser.parse_args()
     use_sim_time = argument_parser.use_sim_time
-    print(f"{use_sim_time=}")
+    print(f'{use_sim_time=}')
 
     rclpy.init()
 
@@ -273,28 +330,29 @@ def main():
     \n"""
 
     while rclpy.ok():
+
         def input_thread(node: DummyGCS):
             while rclpy.ok():
                 user_input = input(msg_input)
-                if user_input.lower() == "q":
+                if user_input.lower() == 'q':
                     rclpy.shutdown()
                     break
-                if user_input.lower() == "l":
+                if user_input.lower() == 'l':
                     node.publish_mission()
-                elif user_input.lower() == "s":
+                elif user_input.lower() == 's':
                     node.publish_cmd(MissionUpdate.START)
-                elif user_input.lower() == "n":
+                elif user_input.lower() == 'n':
                     node.publish_cmd(MissionUpdate.STOP)
-                elif user_input.lower() == "p":
+                elif user_input.lower() == 'p':
                     node.publish_cmd(MissionUpdate.PAUSE)
-                elif user_input.lower() == "r":
+                elif user_input.lower() == 'r':
                     node.publish_cmd(MissionUpdate.RESUME)
-                elif user_input.lower() == "a":
+                elif user_input.lower() == 'a':
                     node.publish_cmd(MissionUpdate.STOP)
-                elif user_input.lower() == "c":
+                elif user_input.lower() == 'c':
                     node.perform_take_sample_mission()
                     # node.perform_take_sample_mission_with_follow_path()
-                elif user_input.lower() == "b":
+                elif user_input.lower() == 'b':
                     node.perform_boat_mission()
 
         thread = threading.Thread(target=input_thread, args=(gcs,))
@@ -306,7 +364,7 @@ def main():
     rclpy.try_shutdown()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--n', type=str, default='drone0', help='Namespace')
     parser.add_argument('--use_sim_time', action='store_true', help='Use sim time')
