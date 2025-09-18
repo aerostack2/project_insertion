@@ -40,7 +40,7 @@ if [[ -z "$ROSBAG_NAME" ]]; then
 fi
 
 # Construct the rosbag record command
-rosbag_cmd="ros2 bag record"
+rosbag_cmd="ros2 bag record --include-hidden-topics"
 
 # Read topics from the config file, ignoring comments (#) and disabled topics (!)
 while IFS= read -r topic; do
@@ -49,7 +49,7 @@ while IFS= read -r topic; do
 done < "$CONFIG_FILE"
 
 # Check if any topics were added
-if [[ "$rosbag_cmd" == "ros2 bag record" ]]; then
+if [[ "$rosbag_cmd" == "ros2 bag record --include-hidden-topics" ]]; then
   echo "Warning: No valid topics found in $CONFIG_FILE"
   exit 1
 fi
