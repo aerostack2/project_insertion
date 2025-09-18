@@ -37,38 +37,42 @@ __license__ = 'BSD-3-Clause'
 
 import argparse
 import random
-import rclpy
 import time
 
+from as2_msgs.msg import MissionUpdate, PlatformInfo, PlatformStatus
+from as2_python_api.mission_interpreter.mission import InterpreterState, InterpreterStatus
+import rclpy
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.parameter import Parameter
-from rclpy.qos import qos_profile_system_default, qos_profile_sensor_data, QoSProfile, \
-    QoSReliabilityPolicy, QoSHistoryPolicy
-
-from std_msgs.msg import String
+from rclpy.qos import (
+    qos_profile_sensor_data,
+    qos_profile_system_default,
+    QoSHistoryPolicy,
+    QoSProfile,
+    QoSReliabilityPolicy,
+)
 from sensor_msgs.msg import NavSatFix
-from as2_msgs.msg import MissionUpdate, PlatformInfo, PlatformStatus
-from as2_python_api.mission_interpreter.mission import InterpreterStatus, InterpreterState
+from std_msgs.msg import String
 
 
 def platform_status_to_str(status: PlatformStatus) -> str:
     """Convert PlatformStatus to string"""
     if status == PlatformStatus.DISARMED:
-        return "DISARMED"
+        return 'DISARMED'
     elif status == PlatformStatus.LANDED:
-        return "LANDED"
+        return 'LANDED'
     elif status == PlatformStatus.TAKING_OFF:
-        return "TAKING_OFF"
+        return 'TAKING_OFF'
     elif status == PlatformStatus.FLYING:
-        return "FLYING"
+        return 'FLYING'
     elif status == PlatformStatus.LANDING:
-        return "LANDING"
+        return 'LANDING'
     elif status == PlatformStatus.EMERGENCY:
-        return "EMERGENCY"
+        return 'EMERGENCY'
     else:
-        return "UNKNOWN"
+        return 'UNKNOWN'
 
 
 class InsertionMonitor(Node):
@@ -89,34 +93,40 @@ class InsertionMonitor(Node):
         self.platform_status: PlatformStatus = None
 
         qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.RELIABLE,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=10
+            reliability=QoSReliabilityPolicy.RELIABLE, history=QoSHistoryPolicy.KEEP_LAST, depth=10
         )
 
         status_qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.RELIABLE,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1
+            reliability=QoSReliabilityPolicy.RELIABLE, history=QoSHistoryPolicy.KEEP_LAST, depth=1
         )
 
         self.mission_status_sub = self.create_subscription(
-            String, "/mission_status", self.mission_status_callback, status_qos_profile)
+            String, '/mission_status', self.mission_status_callback, status_qos_profile
+        )
         self.mission_update_pub = self.create_publisher(
-            MissionUpdate, "/mission_update", qos_profile_system_default)
+            MissionUpdate, '/mission_update', qos_profile_system_default
+        )
 
         self.platform_info_sub = self.create_subscription(
-            PlatformInfo, "/" + drone_target + "/platform/info",
-            self.platform_info_callback, qos_profile_system_default)
+            PlatformInfo,
+            '/' + drone_target + '/platform/info',
+            self.platform_info_callback,
+            qos_profile_system_default,
+        )
 
-        self.gps_sub = self.create_subscription(NavSatFix,
-                                                f"/{drone_target}/sensor_measurements/gps",
-                                                self.gps_callback, qos_profile_sensor_data)
+        self.gps_sub = self.create_subscription(
+            NavSatFix,
+            f'/{drone_target}/sensor_measurements/gps',
+            self.gps_callback,
+            qos_profile_sensor_data,
+        )
 
         timer_cb_group = MutuallyExclusiveCallbackGroup()
         self.timer = self.create_timer(1.0, self.timer_callback, callback_group=timer_cb_group)
         self.timer_cont = 0
         self.timer_goal = random.randint(10, 20)
+
+        self.is_idle = False
 
         self.get_logger().info('Monitor initialized')
 
@@ -124,8 +134,7 @@ class InsertionMonitor(Node):
         """Platform info callback"""
         self.connected = msg.connected
         if msg.status.state != self.platform_status:
-            self.get_logger().info(
-                f"Platform Status: {platform_status_to_str(msg.status.state)}")
+            self.get_logger().info(f'Platform Status: {platform_status_to_str(msg.status.state)}')
         self.platform_status = msg.status.state
 
     def gps_callback(self, msg: NavSatFix):
@@ -137,8 +146,10 @@ class InsertionMonitor(Node):
         status = InterpreterStatus.parse_raw(msg.data)
         # self.get_logger().info(str(status))
 
+        self.is_idle = status.state == InterpreterState.IDLE
+
         if self.last_status != status or self.last_status is None:
-            self.get_logger().info(f"Interpreter Status: {status}")
+            self.get_logger().info(f'Interpreter Status: {status}')
 
         self.last_status = status
 
@@ -150,39 +161,43 @@ class InsertionMonitor(Node):
     def perform_take_sample_mission(self):
         """Perform take sample mission"""
         keep_item_id = self.last_status.done_items - 1
-        self.get_logger().info(f"Stop scan mission, {keep_item_id}")
+        self.get_logger().info(f'Stop scan mission, {keep_item_id}')
         self.publish_cmd(MissionUpdate.STOP)
 
-        time.sleep(0.5)
-        self.get_logger().info("Start take sample mission")
+        while not self.is_idle:
+            time.sleep(0.1)
+
+        self.get_logger().info('Start take sample mission')
         self.publish_cmd(MissionUpdate.START, mission_id=1)
 
         time.sleep(0.5)
         while self.last_status.current_item != None:
             time.sleep(0.1)
 
-        self.get_logger().info(f"Resume scan mission, {keep_item_id}")
-        msg = MissionUpdate(drone_id='drone0', mission_id=0,
-                            item_id=keep_item_id, action=MissionUpdate.START)
+        self.get_logger().info(f'Resume scan mission, {keep_item_id}')
+        msg = MissionUpdate(
+            drone_id='drone0', mission_id=0, item_id=keep_item_id, action=MissionUpdate.START
+        )
         self.mission_update_pub.publish(msg)
 
     def perform_boat_mission(self):
         """Perform boat mission"""
         keep_item_id = self.last_status.done_items - 2  # Go back 1 waypoints
-        self.get_logger().info(f"Stop scan mission, {keep_item_id}")
+        self.get_logger().info(f'Stop scan mission, {keep_item_id}')
         self.publish_cmd(MissionUpdate.STOP)
 
         time.sleep(0.5)
-        self.get_logger().info("Start boat mission")
+        self.get_logger().info('Start boat mission')
         self.publish_cmd(MissionUpdate.START, mission_id=2)
 
         time.sleep(0.5)
         while self.last_status.current_item != None:
             time.sleep(0.1)
 
-        self.get_logger().info(f"Resume scan mission, {keep_item_id}")
-        msg = MissionUpdate(drone_id='drone0', mission_id=0,
-                            item_id=keep_item_id, action=MissionUpdate.START)
+        self.get_logger().info(f'Resume scan mission, {keep_item_id}')
+        msg = MissionUpdate(
+            drone_id='drone0', mission_id=0, item_id=keep_item_id, action=MissionUpdate.START
+        )
         self.mission_update_pub.publish(msg)
 
     def timer_callback(self):
@@ -192,13 +207,15 @@ class InsertionMonitor(Node):
 
         self.timer_cont += 1
         if self.timer_cont >= self.timer_goal:
-            self.get_logger().info(f"Timer goal reached: {self.timer_goal}")
+            self.get_logger().info(f'Timer goal reached: {self.timer_goal}')
             self.timer_cont = 0
             self.timer_goal = random.randint(10, 20)
 
-            if self.last_status is not None and \
-               self.last_status.state == InterpreterState.RUNNING and \
-                    self.last_status.current_item.behavior == 'go_to':
+            if (
+                self.last_status is not None
+                and self.last_status.state == InterpreterState.RUNNING
+                and self.last_status.current_item.behavior == 'go_to'
+            ):
                 self.perform_take_sample_mission()
                 # self.perform_boat_mission()
 
@@ -207,12 +224,13 @@ def main():
     """Node spin"""
     argument_parser = parser.parse_args()
     use_sim_time = argument_parser.use_sim_time
-    print(f"{use_sim_time=}")
+    print(f'{use_sim_time=}')
 
     rclpy.init()
 
-    node = InsertionMonitor(drone_target=argument_parser.n,
-                            use_sim_time=argument_parser.use_sim_time)
+    node = InsertionMonitor(
+        drone_target=argument_parser.n, use_sim_time=argument_parser.use_sim_time
+    )
     executor = MultiThreadedExecutor()
     executor.add_node(node)
 
