@@ -126,24 +126,24 @@ class BoatMission(Mission):
 class DummyGCS(Node):
     """Dummy Ground Control Station node"""
 
-    def __init__(self, use_sim_time=False):
+    def __init__(self, use_sim_time=False, drone_target='drone0'):
         super().__init__('dummy_gcs')
 
         self.param_use_sim_time = Parameter('use_sim_time', Parameter.Type.BOOL, use_sim_time)
         self.set_parameters([self.param_use_sim_time])
 
         self.__resume_client = self.create_client(
-            Trigger, '/drone0/FollowPathBehavior/_behavior/resume')
+            Trigger, f'/{drone_target}/FollowPathBehavior/_behavior/resume')
 
         qos = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, history=HistoryPolicy.KEEP_LAST,
                          depth=10)
 
         self.uplink = self.create_publisher(
-            MissionUpdate, '/mission_update', qos_profile_system_default)
+            MissionUpdate, f'/{drone_target}/mission_update', qos_profile_system_default)
 
         self.status = None
         self.downlink = self.create_subscription(
-            String, "/mission_status", self.downlink_callback, qos)
+            String, f'/{drone_target}/mission_status', self.downlink_callback, qos)
 
         self.get_logger().info("Dummy GCS ready")
 
@@ -257,7 +257,7 @@ def main():
 
     rclpy.init()
 
-    gcs = DummyGCS(use_sim_time=use_sim_time)
+    gcs = DummyGCS(use_sim_time=use_sim_time, drone_target=argument_parser.n)
     msg_input = """
     l:      load mission
     s:      start mission
@@ -305,6 +305,7 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--n', type=str, default='drone0', help='Namespace')
     parser.add_argument('--use_sim_time', action='store_true', help='Use sim time')
 
     main()
