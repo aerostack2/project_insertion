@@ -12,7 +12,7 @@ windows:
   - zenoh:
       layout:
       panes:
-        - zenoh_drone.bash
+        - ./zenoh_drone.bash
 
   # Platform
   - platform:
