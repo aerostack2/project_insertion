@@ -129,6 +129,7 @@ class DummyGCS(Node):
     def __init__(self, use_sim_time=False, drone_target='drone0'):
         super().__init__('dummy_gcs')
 
+        self.drone_target = drone_target
         self.param_use_sim_time = Parameter('use_sim_time', Parameter.Type.BOOL, use_sim_time)
         self.set_parameters([self.param_use_sim_time])
 
@@ -156,7 +157,7 @@ class DummyGCS(Node):
             area_corners=[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
             altitude=2.0, speed=1.0)
 
-        msg = MissionUpdate(drone_id='drone0', mission_id=0, action=MissionUpdate.LOAD,
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=0, action=MissionUpdate.LOAD,
                             mission=scan_mission.json())
         self.get_logger().info(f"Publishing Area Scan mission")
         self.get_logger().debug(f"{scan_mission.json()}")
@@ -164,7 +165,7 @@ class DummyGCS(Node):
 
         time.sleep(0.5)
         take_sample_mission = TakeSampleMission(altitude=1.0, speed=0.5)
-        msg = MissionUpdate(drone_id='drone0', mission_id=1, action=MissionUpdate.LOAD,
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=1, action=MissionUpdate.LOAD,
                             mission=take_sample_mission.json())
         self.get_logger().info(f"Publishing Take Sample mission")
         self.get_logger().debug(f"{take_sample_mission.json()}")
@@ -172,7 +173,7 @@ class DummyGCS(Node):
 
         time.sleep(0.5)
         boat_mission = BoatMission(altitude=1.0, speed=0.5)
-        msg = MissionUpdate(drone_id='drone0', mission_id=2, action=MissionUpdate.LOAD,
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=2, action=MissionUpdate.LOAD,
                             mission=boat_mission.json())
         self.get_logger().info(f"Publishing Boat mission")
         self.get_logger().debug(f"{boat_mission.json()}")
