@@ -61,8 +61,4 @@ windows:
         layout:
         panes:
             - ros2 run as2_python_api mission_executor --n <%= drone_namespace %> --use_sim_time
-            - ros2 launch as2_visualization as2_visualization.launch.py
-                namespace:=<%= drone_namespace %>
-                use_sim_time:=true
-                record_length:=10000
-                rviz_config:=config_ground_station/config.rviz
+            - python monitor_mission.py --n <%= drone_namespace %> --use_sim_time
