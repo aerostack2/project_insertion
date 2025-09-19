@@ -149,6 +149,37 @@ class BoatMission(Mission):
         self.plan.append(go_to_item)
 
 
+class TakeoffGoBoatMission(Mission):
+    """Takeoff and go to a point in the boat frame"""
+
+    def __init__(self, target, altitude, boat_altitude, speed):
+        super().__init__(target=target)
+
+        takeoff_item = MissionItem(behavior='takeoff', args={'height': altitude, 'speed': speed})
+        self.plan.append(takeoff_item)
+        go_to_item = MissionItem(
+            behavior='go_to',
+            method='go_to_point',
+            args={'point': [0.0, 0.0, altitude], 'speed': speed, 'frame_id': 'boat'},
+        )
+        self.plan.append(go_to_item)
+        approach_boat_item = MissionItem(
+            behavior='go_to',
+            method='go_to_point',
+            args={'point': [0.0, 0.0, boat_altitude], 'speed': speed, 'frame_id': 'boat'},
+        )
+        self.plan.append(approach_boat_item)
+        self.plan.append(go_to_item)
+        go_to_map_origin_item = MissionItem(
+            behavior='go_to',
+            method='go_to_point',
+            args={'point': [0.0, 0.0, altitude], 'speed': speed, 'frame_id': f'{target}/map'},
+        )
+        self.plan.append(go_to_map_origin_item)
+        land_item = MissionItem(behavior='land', args={'speed': speed})
+        self.plan.append(land_item)
+
+
 class DummyGCS(Node):
     """Dummy Ground Control Station node"""
 
@@ -306,6 +337,27 @@ class DummyGCS(Node):
         )
         self.uplink.publish(msg)
 
+    def perform_full_boat_mission(self):
+        """Load full boat mission, send it and start it"""
+
+        full_boat_mission = TakeoffGoBoatMission(
+            target=self.drone_target, altitude=5.0, boat_altitude=2.0, speed=1.0
+        )
+        msg = MissionUpdate(
+            drone_id=self.drone_target,
+            mission_id=10,
+            action=MissionUpdate.LOAD,
+            mission=full_boat_mission.json(),
+        )
+        self.get_logger().info('Publishing Full Boat mission')
+        self.get_logger().debug(f'{full_boat_mission.json()}')
+        self.uplink.publish(msg)
+
+        time.sleep(0.5)
+        self.get_logger().info('Start full boat mission')
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=3, action=MissionUpdate.START)
+        self.uplink.publish(msg)
+
     def downlink_callback(self, msg: String):
         """New mission status update"""
         self.status = InterpreterStatus.parse_raw(msg.data)
@@ -329,8 +381,9 @@ def main():
     p:      pause mission
     r:      resume mission
     a:      abort mission
-    c:      send take sample mission
-    b:      send boat mission
+    c:      send interrupt take sample mission
+    b:      send interrupt boat mission
+    z:      send full boat mission
     q:      quit
     \n"""
 
@@ -359,6 +412,8 @@ def main():
                     # node.perform_take_sample_mission_with_follow_path()
                 elif user_input.lower() == 'b':
                     node.perform_boat_mission()
+                elif user_input.lower() == 'z':
+                    node.perform_full_boat_mission()
 
         thread = threading.Thread(target=input_thread, args=(gcs,))
         thread.start()
