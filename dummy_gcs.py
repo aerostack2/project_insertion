@@ -228,7 +228,7 @@ class DummyGCS(Node):
         full_boat_mission_params = mission_params['full_boat_mission']
         self.TakeoffGoBoatMission = TakeoffGoBoatMission(
             target=drone_target,
-            altitude=full_boat_mission_params['takeoff_altitude'],
+            altitude=full_boat_mission_params['altitude'],
             boat_altitude=full_boat_mission_params['boat_altitude'],
             speed=full_boat_mission_params['speed'],
         )
