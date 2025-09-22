@@ -233,7 +233,8 @@ class InsertionMonitor(Node):
             if (
                 self.last_status is not None
                 and self.last_status.state == InterpreterState.RUNNING
-                and self.last_status.current_item.behavior == 'go_to'
+                and (self.last_status.current_item.behavior == 'go_to' or
+                     self.last_status.current_item.behavior == 'go_to_gps')
             ):
                 self.perform_take_sample_mission()
                 self.sample_cont += 1
