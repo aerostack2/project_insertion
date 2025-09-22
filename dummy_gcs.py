@@ -264,7 +264,7 @@ class DummyGCS(Node):
         scan_mission = self.AreaScanMission
         msg = MissionUpdate(
             drone_id=self.drone_target,
-            mission_id=0,
+            mission_id=20,
             action=MissionUpdate.LOAD,
             mission=scan_mission.json(),
         )
