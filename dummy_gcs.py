@@ -205,6 +205,7 @@ class DummyGCS(Node):
 
         area_scan_params = mission_params['area_scan_mission']
         self.AreaScanMission = AreaScanMission(
+            target=drone_target,
             area_corners=area_scan_params['corners'],
             altitude=area_scan_params['altitude'],
             speed=area_scan_params['speed'],
@@ -212,16 +213,21 @@ class DummyGCS(Node):
 
         take_sample_params = mission_params['take_sample_mission']
         self.TakeSampleMission = TakeSampleMission(
-            altitude=take_sample_params['altitude'], speed=take_sample_params['speed']
+            target=drone_target,
+            altitude=take_sample_params['altitude'],
+            speed=take_sample_params['speed'],
         )
 
         boat_mission_params = mission_params['boat_mission']
         self.BoatMission = BoatMission(
-            altitude=boat_mission_params['altitude'], speed=boat_mission_params['speed']
+            target=drone_target,
+            altitude=boat_mission_params['altitude'],
+            speed=boat_mission_params['speed'],
         )
 
         full_boat_mission_params = mission_params['full_boat_mission']
         self.TakeoffGoBoatMission = TakeoffGoBoatMission(
+            target=drone_target,
             altitude=full_boat_mission_params['takeoff_altitude'],
             boat_altitude=full_boat_mission_params['boat_altitude'],
             speed=full_boat_mission_params['speed'],
