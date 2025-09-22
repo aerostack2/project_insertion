@@ -47,6 +47,7 @@ from rclpy.parameter import Parameter
 from rclpy.qos import HistoryPolicy, qos_profile_system_default, QoSProfile, ReliabilityPolicy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
+import yaml
 
 
 class AreaScanMission(Mission):
@@ -172,11 +173,47 @@ class TakeoffGoBoatMission(Mission):
 class DummyGCS(Node):
     """Dummy Ground Control Station node"""
 
-    def __init__(self, use_sim_time=False):
+    def __init__(self, use_sim_time=False, mission_params=None):
         super().__init__('dummy_gcs')
 
         self.param_use_sim_time = Parameter('use_sim_time', Parameter.Type.BOOL, use_sim_time)
         self.set_parameters([self.param_use_sim_time])
+
+        if mission_params is None or 'area_scan_mission' not in mission_params:
+            print('No mission parameters for area scan mission')
+            return
+
+        if mission_params is None or 'take_sample_mission' not in mission_params:
+            print('No mission parameters for take sample mission')
+            return
+
+        if mission_params is None or 'boat_mission' not in mission_params:
+            print('No mission parameters for boat mission')
+            return
+
+        area_scan_params = mission_params['area_scan_mission']
+        self.AreaScanMission = AreaScanMission(
+            area_corners=area_scan_params['corners'],
+            altitude=area_scan_params['altitude'],
+            speed=area_scan_params['speed'],
+        )
+
+        take_sample_params = mission_params['take_sample_mission']
+        self.TakeSampleMission = TakeSampleMission(
+            altitude=take_sample_params['altitude'], speed=take_sample_params['speed']
+        )
+
+        boat_mission_params = mission_params['boat_mission']
+        self.BoatMission = BoatMission(
+            altitude=boat_mission_params['altitude'], speed=boat_mission_params['speed']
+        )
+
+        full_boat_mission_params = mission_params['full_boat_mission']
+        self.TakeoffGoBoatMission = TakeoffGoBoatMission(
+            altitude=full_boat_mission_params['takeoff_altitude'],
+            boat_altitude=full_boat_mission_params['boat_altitude'],
+            speed=full_boat_mission_params['speed'],
+        )
 
         self.__resume_client = self.create_client(
             Trigger, '/drone0/FollowPathBehavior/_behavior/resume'
@@ -202,12 +239,8 @@ class DummyGCS(Node):
         # scan_mission = AreaScanFollowPathMission(
         #     area_corners=[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
         #     altitude=2.0, speed=1.0)
-        scan_mission = AreaScanMission(
-            area_corners=[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
-            altitude=2.0,
-            speed=1.0,
-        )
 
+        scan_mission = self.AreaScanMission
         msg = MissionUpdate(
             drone_id='drone0', mission_id=0, action=MissionUpdate.LOAD, mission=scan_mission.json()
         )
@@ -216,7 +249,9 @@ class DummyGCS(Node):
         self.uplink.publish(msg)
 
         time.sleep(0.5)
-        take_sample_mission = TakeSampleMission(altitude=1.0, speed=0.5)
+
+        take_sample_mission = self.TakeSampleMission
+
         msg = MissionUpdate(
             drone_id='drone0',
             mission_id=1,
@@ -228,7 +263,7 @@ class DummyGCS(Node):
         self.uplink.publish(msg)
 
         time.sleep(0.5)
-        boat_mission = BoatMission(altitude=1.0, speed=0.5)
+        boat_mission = self.BoatMission
         msg = MissionUpdate(
             drone_id='drone0', mission_id=2, action=MissionUpdate.LOAD, mission=boat_mission.json()
         )
@@ -289,6 +324,7 @@ class DummyGCS(Node):
         self.publish_cmd(MissionUpdate.STOP)
 
         time.sleep(0.5)
+
         self.get_logger().info('Start boat mission')
         msg = MissionUpdate(drone_id='drone0', mission_id=2, action=MissionUpdate.START)
         self.uplink.publish(msg)
@@ -306,7 +342,7 @@ class DummyGCS(Node):
     def perform_full_boat_mission(self):
         """Load full boat mission, send it and start it"""
 
-        full_boat_mission = TakeoffGoBoatMission(altitude=5.0, boat_altitude=2.0, speed=1.0)
+        full_boat_mission = self.TakeoffGoBoatMission
         msg = MissionUpdate(
             drone_id='drone0',
             mission_id=10,
@@ -334,9 +370,25 @@ def main():
     use_sim_time = argument_parser.use_sim_time
     print(f'{use_sim_time=}')
 
+    param_file = (
+        argument_parser.load_yaml_params if argument_parser.load_yaml_params != '' else None
+    )
+
+    if param_file is not None:
+        print(f'Loading mission parameters from file: {param_file}')
+    else:
+        print('No mission parameters file provided, using default parameters')
+
+    if param_file is not None:
+        with open(param_file, 'r') as f:
+            mission_params = yaml.safe_load(f)
+            print(mission_params)
+    else:
+        mission_params = {}
+
     rclpy.init()
 
-    gcs = DummyGCS(use_sim_time=use_sim_time)
+    gcs = DummyGCS(use_sim_time=use_sim_time, mission_params=mission_params)
     msg_input = """
     l:      load mission
     s:      start mission
@@ -389,5 +441,6 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_sim_time', action='store_true', help='Use sim time')
+    parser.add_argument('--mission_params', type=str, help='YAML params file to load', default='')
 
     main()
