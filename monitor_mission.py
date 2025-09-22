@@ -38,6 +38,7 @@ __license__ = 'BSD-3-Clause'
 import argparse
 import random
 import time
+import yaml
 
 from as2_msgs.msg import MissionUpdate, PlatformInfo, PlatformStatus
 from as2_python_api.mission_interpreter.mission import InterpreterState, InterpreterStatus
@@ -78,13 +79,17 @@ def platform_status_to_str(status: PlatformStatus) -> str:
 class InsertionMonitor(Node):
     """ROS 2 Node for monitoring INSERTION missions."""
 
-    def __init__(self, drone_target, use_sim_time=False):
+    def __init__(self, drone_target: str, timer_max_wait_time: int,
+                 timer_min_wait_time: int, max_samples: int, use_sim_time=False):
         super().__init__('monitor')
 
         self.param_use_sim_time = Parameter('use_sim_time', Parameter.Type.BOOL, use_sim_time)
         self.set_parameters([self.param_use_sim_time])
 
         self.drone_target = drone_target
+        self.timer_max_wait_time = timer_max_wait_time  # seconds
+        self.timer_min_wait_time = timer_min_wait_time  # seconds
+        self.max_samples = max_samples
 
         self.last_status: InterpreterStatus = None
 
@@ -127,7 +132,8 @@ class InsertionMonitor(Node):
         timer_cb_group = MutuallyExclusiveCallbackGroup()
         self.timer = self.create_timer(1.0, self.timer_callback, callback_group=timer_cb_group)
         self.timer_cont = 0
-        self.timer_goal = random.randint(10, 20)
+        self.timer_goal = random.randint(self.timer_min_wait_time, self.timer_max_wait_time)
+        self.sample_cont = 0
 
         self.is_idle = False
 
@@ -222,7 +228,7 @@ class InsertionMonitor(Node):
         if self.timer_cont >= self.timer_goal:
             self.get_logger().info(f'Timer goal reached: {self.timer_goal}')
             self.timer_cont = 0
-            self.timer_goal = random.randint(10, 20)
+            self.timer_goal = random.randint(self.timer_min_wait_time, self.timer_max_wait_time)
 
             if (
                 self.last_status is not None
@@ -230,7 +236,11 @@ class InsertionMonitor(Node):
                 and self.last_status.current_item.behavior == 'go_to'
             ):
                 self.perform_take_sample_mission()
-                # self.perform_boat_mission()
+                self.sample_cont += 1
+                if self.sample_cont >= self.max_samples:
+                    self.get_logger().info('Max samples reached, starting boat mission')
+                    self.perform_boat_mission()
+                    self.sample_cont = 0
 
 
 def main():
@@ -239,10 +249,16 @@ def main():
     use_sim_time = argument_parser.use_sim_time
     print(f'{use_sim_time=}')
 
+    with open(argument_parser.config, 'r', encoding='utf-8') as file:
+        yaml_data = yaml.safe_load(file)
+        print(yaml_data)
+
     rclpy.init()
 
     node = InsertionMonitor(
-        drone_target=argument_parser.n, use_sim_time=argument_parser.use_sim_time
+        drone_target=argument_parser.n, timer_max_wait_time=yaml_data['timer_max_wait_time'],
+        timer_min_wait_time=yaml_data['timer_min_wait_time'], max_samples=yaml_data['max_samples'],
+        use_sim_time=argument_parser.use_sim_time
     )
     executor = MultiThreadedExecutor()
     executor.add_node(node)
@@ -256,4 +272,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--n', type=str, default='drone0', help='Namespace')
     parser.add_argument('--use_sim_time', action='store_true', help='Use sim time')
+    parser.add_argument('--config', type=str, default='config/monitor.yaml',
+                        help='Monitor config file')
     main()
