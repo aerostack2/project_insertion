@@ -370,9 +370,7 @@ def main():
     use_sim_time = argument_parser.use_sim_time
     print(f'{use_sim_time=}')
 
-    param_file = (
-        argument_parser.load_yaml_params if argument_parser.load_yaml_params != '' else None
-    )
+    param_file = argument_parser.mission_params if argument_parser.mission_params != '' else None
 
     if param_file is not None:
         print(f'Loading mission parameters from file: {param_file}')
@@ -441,6 +439,8 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_sim_time', action='store_true', help='Use sim time')
-    parser.add_argument('--mission_params', type=str, help='YAML params file to load', default='')
+    parser.add_argument(
+        '--mission_params', type=str, help='YAML params file to load', default='config/gcs.yaml'
+    )
 
     main()
