@@ -158,6 +158,12 @@ class TakeoffGoBoatMission(Mission):
 
         takeoff_item = MissionItem(behavior='takeoff', args={'height': altitude, 'speed': speed})
         self.plan.append(takeoff_item)
+        safety_goto = MissionItem(
+            behavior='go_to',
+            method='go_to_point',
+            args={'point': [0.0, 0.0, altitude], 'speed':speed, 'frame_id':f'{target}/map'}, 
+                )
+        self.plan.append(safety_goto)
         go_to_item = MissionItem(
             behavior='go_to',
             method='go_to_point',
@@ -169,6 +175,10 @@ class TakeoffGoBoatMission(Mission):
             method='go_to_point',
             args={'point': [0.0, 0.0, boat_altitude], 'speed': speed, 'frame_id': 'boat'},
         )
+        self.plan.append(approach_boat_item)
+        self.plan.append(go_to_item)
+        self.plan.append(approach_boat_item)
+        self.plan.append(go_to_item)
         self.plan.append(approach_boat_item)
         self.plan.append(go_to_item)
         go_to_map_origin_item = MissionItem(
@@ -297,6 +307,18 @@ class DummyGCS(Node):
         self.get_logger().debug(f'{boat_mission.json()}')
         self.uplink.publish(msg)
 
+        time.sleep(0.5)
+        fullboat_mission = self.TakeoffGoBoatMission
+        msg = MissionUpdate(
+            drone_id=self.drone_target,
+            mission_id=10,
+            action=MissionUpdate.LOAD,
+            mission=fullboat_mission.json(),
+        )
+        self.get_logger().info('Publishing FullBoat mission')
+        self.get_logger().debug(f'{fullboat_mission.json()}')
+        self.uplink.publish(msg)
+
     def publish_cmd(self, cmd: int):
         """Publish a command to the mission with mission_id=0"""
         msg = MissionUpdate(drone_id=self.drone_target, mission_id=0, action=cmd)
@@ -382,20 +404,9 @@ class DummyGCS(Node):
     def perform_full_boat_mission(self):
         """Load full boat mission, send it and start it"""
 
-        full_boat_mission = self.TakeoffGoBoatMission
-        msg = MissionUpdate(
-            drone_id=self.drone_target,
-            mission_id=10,
-            action=MissionUpdate.LOAD,
-            mission=full_boat_mission.json(),
-        )
-        self.get_logger().info('Publishing Full Boat mission')
-        self.get_logger().debug(f'{full_boat_mission.json()}')
-        self.uplink.publish(msg)
-
         time.sleep(0.5)
-        self.get_logger().info('Start full boat mission')
-        msg = MissionUpdate(drone_id=self.drone_target, mission_id=3, action=MissionUpdate.START)
+        self.get_logger().info('Start full boat mission') 
+        msg = MissionUpdate(drone_id=self.drone_target, mission_id=10, action=MissionUpdate.START)
         self.uplink.publish(msg)
 
     def downlink_callback(self, msg: String):

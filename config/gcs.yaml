@@ -1,5 +1,5 @@
 area_scan_mission:
-  altitude: 2.0
+  altitude: 30.0
   speed: 1.0
   corners:
       - [0.0, 0.0]
@@ -7,12 +7,12 @@ area_scan_mission:
       - [10.0, 10.0]
       - [0.0, 10.0]
 take_sample_mission:
-  altitude: 1.0
+  altitude: 10.0
   speed: 0.5
 boat_mission:
-  altitude: 1.0
+  altitude: 8.0
   speed: 0.5
 full_boat_mission:
-  altitude: 5.0
-  boat_altitude: 2.0
+  altitude: 20.0
+  boat_altitude: 3.5
   speed: 1.0
